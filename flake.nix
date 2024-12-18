@@ -15,7 +15,7 @@
         ({ pkgs, lib, ... }: {
           services.proxmox-ve = {
             enable = true;
-            ipAddress = "10.0.0.52";  # Set your desired Proxmox IP address
+            ipAddress = "10.0.0.65";  # Set your desired Proxmox IP address
           };
 
           nixpkgs.overlays = [

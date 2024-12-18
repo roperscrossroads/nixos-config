@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports =
@@ -18,14 +18,47 @@
   boot.kernelModules = [ "amdgpu" ];
 
   networking.hostName = "nixos"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable networking
+  # Enable NetworkManager but ignore wired interfaces
   networking.networkmanager.enable = true;
+  networking.networkmanager.unmanaged = [ "enp3s0" "vmbr0" "eno1" ];
+
+  # use systemd-networkd for wired network management
+  systemd.network.enable = true;
+  systemd.network.wait-online.anyInterface = true;
+
+  # Configure networking with systemd-networkd
+  systemd.network = {
+    netdevs = {
+      "vmbr0" = {
+        netdevConfig = {
+          Kind = "bridge";
+          Name = "vmbr0";
+        };
+      };
+    };
+
+    networks = {
+      # Configure enp3s0 with a static IP
+      "10-lan" = {
+        matchConfig.Name = "enp3s0";
+        networkConfig = {
+          Address = "10.0.0.65/24";
+          Gateway = "10.0.0.1";
+          DNS = [ "8.8.8.8" ];
+        };
+      };
+
+      "10-lan-bridge" = {
+        matchConfig.Name = "vmbr0";
+        networkConfig = {
+          IPv6AcceptRA = true;
+          DHCP = "ipv4";
+        };
+        linkConfig.RequiredForOnline = "routable";  # Make the bridge required for online
+      };
+    };
+  };
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
