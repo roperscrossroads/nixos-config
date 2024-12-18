@@ -25,37 +25,32 @@
 
   # use systemd-networkd for wired network management
   systemd.network.enable = true;
-  systemd.network.wait-online.anyInterface = true;
+  #systemd.network.wait-online.anyInterface = true;
 
-  # Configure networking with systemd-networkd
   systemd.network = {
+    networks = {
+      "10-lan" = {
+        matchConfig.Name = "enp3s0";
+        networkConfig = {
+        Bridge = "vmbr0";
+        };
+      };
+      "10-lan-bridge" = {
+          matchConfig.Name = "vmbr0";
+          networkConfig = {
+            Address = "10.0.0.65/24";  # Static IP for vmbr0
+            Gateway = "10.0.0.1";      # Same Gateway
+            DNS = [ "8.8.8.8" ];      # DNS configuration (optional)
+          };
+          linkConfig.RequiredForOnline = "routable";  # Ensure the bridge is online
+        };
+    };
     netdevs = {
       "vmbr0" = {
         netdevConfig = {
           Kind = "bridge";
           Name = "vmbr0";
         };
-      };
-    };
-
-    networks = {
-      # Configure enp3s0 with a static IP
-      "10-lan" = {
-        matchConfig.Name = "enp3s0";
-        networkConfig = {
-          Address = "10.0.0.65/24";
-          Gateway = "10.0.0.1";
-          DNS = [ "8.8.8.8" ];
-        };
-      };
-
-      "10-lan-bridge" = {
-        matchConfig.Name = "vmbr0";
-        networkConfig = {
-          IPv6AcceptRA = true;
-          DHCP = "ipv4";
-        };
-        linkConfig.RequiredForOnline = "routable";  # Make the bridge required for online
       };
     };
   };
@@ -144,6 +139,9 @@
   environment.systemPackages = with pkgs; [
     alacritty
     git
+    libGL
+    libGLU
+    libglvnd
     mesa
     vim
     vulkan-tools
