@@ -10,12 +10,36 @@
       ./hardware-configuration.nix
     ];
 
-  hardware.graphics.enable = true;
-
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelModules = [ "amdgpu" ];
+  boot.kernelModules = [ "amdgpu" "virtio-gpu" ];
+  boot.initrd.kernelModules = [ "amdgpu" ];
+
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+    extraPackages = with pkgs; [
+      amdvlk
+      rocmPackages.clr.icd
+      libGL
+      libGLU
+      libglvnd
+    ];
+    extraPackages32 = with pkgs; [
+      driversi686Linux.amdvlk
+    ];
+  };  
+
+  #hardware.opengl = {
+  #  enable = true;
+  #  driSupport = true;
+  #  driSupport32Bit = true;
+  #};
+
+  virtualisation.libvirtd.enable = true;
+  virtualisation.spiceUSBRedirection.enable = true;
+  programs.virt-manager.enable = true;
 
   networking.hostName = "nixos"; # Define your hostname.
 
@@ -76,7 +100,7 @@
   };
 
   # Enable the X11 windowing system.
-  services.xserver.enable = true;
+  #services.xserver.enable = true;
 
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
@@ -107,6 +131,9 @@
     #media-session.enable = true;
   };
 
+  services.xserver.enable = true;
+  services.xserver.videoDrivers = [ "amdgpu" ];
+
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
@@ -114,7 +141,7 @@
   users.users.wani = {
     isNormalUser = true;
     description = "adam";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "libvirtd" ];
     packages = with pkgs; [
     #  thunderbird
     ];
@@ -138,14 +165,28 @@
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     alacritty
+    btop
+    fzf
     git
     libGL
     libGLU
     libglvnd
+    libvirt
     mesa
+    nix-index
+    qemu
+    qemu_kvm
     vim
+    virglrenderer
+    virt-manager
     vulkan-tools
     wget
+  ];
+
+  programs.nix-ld.enable = true;
+  programs.nix-ld.libraries = with pkgs; [
+    libGL
+    libGLU
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
