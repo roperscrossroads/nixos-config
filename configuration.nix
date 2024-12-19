@@ -38,8 +38,8 @@
   #};
 
   virtualisation.libvirtd.enable = true;
+  #virtualisation.qemu.spiceSupport = true;
   virtualisation.spiceUSBRedirection.enable = true;
-  programs.virt-manager.enable = true;
 
   networking.hostName = "nixos"; # Define your hostname.
 
@@ -170,15 +170,16 @@
     git
     libGL
     libGLU
-    libglvnd
-    libvirt
+    #libglvnd
+    #libvirt
     mesa
     nix-index
-    qemu
-    qemu_kvm
+    #qemu
+    #qemu_kvm
+    spice
+    spice-protocol
     vim
-    virglrenderer
-    virt-manager
+    virt-viewer
     vulkan-tools
     wget
   ];
@@ -206,7 +207,10 @@
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
+  networking.firewall.enable = false;
+  #networking.firewall.allowedTCPPorts = [ 5900 3128 ];
+  #networking.firewall.allowedUDPPorts = [ 10000 10001 10002 ];
+
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
