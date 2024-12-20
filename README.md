@@ -2,15 +2,13 @@
 
 ## spiceproxy works!
 
-I could not find any code to enable this, maybe it's out there but I did not see it.
+I could not find any code to enable this, maybe it's out there but I did not see it. I created a pull request upstream [here](https://github.com/SaumonNet/proxmox-nixos/pull/110).
 
 ## Overview
 
 This is my config for running the Proxmox Hypervisor on NixOS with SPICE working. After trying it out and getting a Debian 12 VM running, I encountered an issue where SPICE was not functioning. It turned out that there was just a stub commented out in the `proxmox-nixos` repository. I added the necessary code in my flake.nix to make sure it is started with systemd. 
 
-I just started learning nix so the next step is to add the snippet from flake.nix to a fork of the main code base, test it, and see if I can get it merged upstream...
-
-Currently, SPICE with qxl or virtio/VirtIO-GPU works. virt-viewer automatically opens and resizes as expected when using the Console -> SPICE option with virtio. However, VirtIO-GL is not yet working.
+Currently, SPICE with qxl or virtio/VirtIO-GPU works. virt-viewer automatically opens and resizes as expected when using the Console -> SPICE option with virtio. However, VirtIO-GL is not yet working on my system.
 
 ## Features
 
@@ -64,8 +62,6 @@ Currently, SPICE with qxl or virtio/VirtIO-GPU works. virt-viewer automatically 
   libGLESv2.la            libOpenGL.la
   ```
 
-## Conclusion
-
 I've only been using NixOS for two days, but this is working so I thought I'd put it out there. I'm sure there are better ways to handle a couple of things, but SPICE with QXL and VirtIO-GPU are working.
 
 ### My Hardware Information (in case it's useful to someone)
@@ -77,10 +73,10 @@ vendor_id    : AuthenticAMD
 cpu family   : 23
 model        : 104
 model name   : AMD Ryzen 7 5700U with Radeon Graphics
-...
-
+```
 
 ## License
 
 This project is licensed under the MIT License.
+
 
