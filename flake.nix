@@ -2,8 +2,8 @@
   description = "Nixos config flake with Proxmox support";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
-    proxmox-nixos.url = "github:SaumonNet/proxmox-nixos";  # Add Proxmox-NixOS input
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    proxmox-nixos.url = "github:SaumonNet/proxmox-nixos";
   };
 
   outputs = { self, nixpkgs, proxmox-nixos, ... }@inputs: {
@@ -11,15 +11,43 @@
       specialArgs = { inherit inputs; };
       modules = [
         ./configuration.nix
-        proxmox-nixos.nixosModules.proxmox-ve  # Add Proxmox VE module
+        proxmox-nixos.nixosModules.proxmox-ve
         ({ pkgs, lib, ... }: {
+
+          # spiceproxy seems to want this directory even though it is empty...
+          #   maybe there is a better way to fix it but this works.
+          systemd.tmpfiles.rules = [
+            "d /usr/share/fonts 0755 root root -"
+            "d /usr/share/fonts/truetype 0755 root root -"
+            "d /usr/share/fonts/truetype/glyphicons 0755 root root -"
+          ];
+
           services.proxmox-ve = {
             enable = true;
-            ipAddress = "10.0.0.65";  # Set your desired Proxmox IP address
+            ipAddress = "10.0.0.65";  #same as vmbr0
           };
-
+          systemd.services.spiceproxy = {
+            description = "PVE SPICE Proxy Server";
+            wantedBy = [ "multi-user.target" ];
+            after = [ "pveproxy.service" ];
+            wants = [ "pveproxy.service" ];
+            serviceConfig = {
+              ExecStartPre = [
+                "${pkgs.coreutils}/bin/mkdir -p /run/spiceproxy"
+                "${pkgs.coreutils}/bin/mkdir -p /var/lock"
+                "${pkgs.coreutils}/bin/touch /var/lock/spiceproxy.lck"
+                "${pkgs.coreutils}/bin/chown www-data:www-data /var/lock/spiceproxy.lck"
+              ];
+              ExecStart = "${pkgs.proxmox-ve}/bin/spiceproxy start";
+              ExecStop = "${pkgs.proxmox-ve}/bin/spiceproxy stop";
+              ExecReload = "${pkgs.proxmox-ve}/bin/spiceproxy restart";
+              PIDFile = "/run/pveproxy/spiceproxy.pid";
+              Type = "forking";
+              Restart = "on-failure";
+            };
+          };
           nixpkgs.overlays = [
-            proxmox-nixos.overlays.x86_64-linux  # Apply the Proxmox overlay
+            proxmox-nixos.overlays.x86_64-linux
           ];
 
           # You can add other configuration settings as needed here
@@ -28,4 +56,3 @@
     };
   };
 }
-
