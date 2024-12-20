@@ -14,7 +14,7 @@
         proxmox-nixos.nixosModules.proxmox-ve
         ({ pkgs, lib, ... }: {
 
-          # spiceproxy seems to want this directory even though it is empty...
+          # spiceproxy seems to want this directory even though it is empty
           #   maybe there is a better way to fix it but this works.
           systemd.tmpfiles.rules = [
             "d /usr/share/fonts 0755 root root -"
@@ -33,15 +33,16 @@
             wants = [ "pveproxy.service" ];
             serviceConfig = {
               ExecStartPre = [
-                "${pkgs.coreutils}/bin/mkdir -p /run/spiceproxy"
-                "${pkgs.coreutils}/bin/mkdir -p /var/lock"
                 "${pkgs.coreutils}/bin/touch /var/lock/spiceproxy.lck"
                 "${pkgs.coreutils}/bin/chown www-data:www-data /var/lock/spiceproxy.lck"
               ];
               ExecStart = "${pkgs.proxmox-ve}/bin/spiceproxy start";
-              ExecStop = "${pkgs.proxmox-ve}/bin/spiceproxy stop";
+              ExecStop = [
+                "${pkgs.coreutils}/bin/rm -f /var/lock/spiceproxy.lck"
+                "${pkgs.proxmox-ve}/bin/spiceproxy stop"
+              ];
               ExecReload = "${pkgs.proxmox-ve}/bin/spiceproxy restart";
-              PIDFile = "/run/pveproxy/spiceproxy.pid";
+              PIDFile = "/run/pveproxy/spiceproxy.pid"; # the code puts it here, not in /run/spiceproxy/
               Type = "forking";
               Restart = "on-failure";
             };
@@ -49,8 +50,6 @@
           nixpkgs.overlays = [
             proxmox-nixos.overlays.x86_64-linux
           ];
-
-          # You can add other configuration settings as needed here
         })
       ];
     };
