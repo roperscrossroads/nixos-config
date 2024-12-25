@@ -145,15 +145,21 @@
   environment.systemPackages = with pkgs; [
     alacritty
     btop
+    fabric-ai
+    floorp-unwrapped
     font-awesome
     fzf
     git
+    iconpack-obsidian
+    lazygit
     libGL
     libGLU
     #libglvnd
     #libvirt
     mesa
     nix-index
+    obsidian
+    pciutils
     spice
     spice-protocol
     vim
